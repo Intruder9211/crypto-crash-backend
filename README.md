@@ -1,3 +1,4 @@
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/93ced729-7b70-4736-9429-f5316594085b" />
 # 💥 Crypto Crash Backend
 
 This is a full-featured backend for a real-time crypto crash game — inspired by games like Bustabit.  

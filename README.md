@@ -30,13 +30,22 @@ It includes a live multiplier engine, WebSocket-based real-time updates, betting
 
 
 crypto-crash-backend/
+
+
 ├── models/              # Mongoose schemas (Player, Transaction)
+
 ├── public/              # Static frontend (test-client.html)
+
 ├── routes/              # API routes for wallet, bet, cashout
+
 ├── services/            # Utility files (e.g., price logic)
+
 ├── socket.js            # WebSocket handlers
+
 ├── gameEngine.js        # Core game loop & multiplier logic
+
 ├── server.js            # Main Express server
+
 ├── .env                 # MongoDB config (not included in repo)
 
 

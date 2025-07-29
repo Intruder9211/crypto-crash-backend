@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crypto Crash Game</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #111;
+      color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #00e676;
+    }
+    .multiplier {
+      font-size: 4rem;
+      margin: 20px 0;
+      color: #FFD700;
+    }
+    .crash {
+      font-size: 1.5rem;
+      color: red;
+      margin-bottom: 20px;
+    }
+    .wallet {
+      margin: 20px 0;
+      background: #222;
+      padding: 10px 20px;
+      border-radius: 10px;
+      width: 250px;
+      text-align: left;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #00e676;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #00c853;
+    }
+    pre {
+      background: #1a1a1a;
+      padding: 10px;
+      border-radius: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 20px;
+      width: 90%;
+    }
+  </style>
+</head>
+<body>
+  <h1>💥 Crypto Crash Game</h1>
+
+  <div class="multiplier" id="multiplier">1.00x</div>
+  <div class="crash" id="crashText"></div>
+
+  <button onclick="cashout()">💸 Cashout</button>
+
+  <div class="wallet" id="wallet">
+    <strong>🎒 Wallet</strong><br/>
+    BTC: ...<br/>
+    ETH: ...<br/>
+    USD: ...
+  </div>
+
+  <pre id="log"></pre>
+
+  <script>
+    const playerId = "6888d4db1709a5c07facf390"; // replace with your actual player ID
+    const socket = io("http://localhost:3000");
+    const multiplierEl = document.getElementById("multiplier");
+    const crashText = document.getElementById("crashText");
+    const walletEl = document.getElementById("wallet");
+    const log = msg => {
+      const logEl = document.getElementById("log");
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    };
+
+    // WebSocket events
+    socket.on("connect", () => log("✅ Connected to server"));
+    socket.on("roundStart", data => {
+      multiplierEl.textContent = "1.00x";
+      crashText.textContent = "";
+      log("🟢 New round started (Round ID: " + data.roundId + ")");
+    });
+    socket.on("multiplier", m => {
+      multiplierEl.textContent = m.toFixed(2) + "x";
+      multiplierEl.style.color = "#FFD700";
+    });
+    socket.on("roundCrash", d => {
+      crashText.textContent = "💥 Crashed at: " + d.crashPoint.toFixed(2) + "x";
+      multiplierEl.style.color = "red";
+      log("💥 Round crashed at: " + d.crashPoint.toFixed(2) + "x");
+    });
+    socket.on("playerCashout", d => {
+      log("💸 Cashout: $" + d.usd.toFixed(2) + " | " + d.payout.toFixed(6) + " " + d.currency);
+      loadWallet();
+    });
+
+    // Wallet loader
+    function loadWallet() {
+      fetch(`http://localhost:3000/wallet/${playerId}`)
+        .then(res => res.json())
+        .then(data => {
+          const w = data.wallet;
+          walletEl.innerHTML = `
+            <strong>🎒 Wallet</strong><br/>
+            BTC: ${w.BTC}<br/>
+            ETH: ${w.ETH}<br/>
+            USD: $${w.USD_Equivalent}
+          `;
+        })
+        .catch(err => log("❌ Failed to load wallet"));
+    }
+
+    // Cashout handler
+    function cashout() {
+      fetch("http://localhost:3000/cashout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerId,
+          cryptoAmount: 0.0001,
+          currency: "BTC"
+        })
+      })
+      .then(res => res.json())
+      .then(data => log("✅ Cashout response: " + JSON.stringify(data)))
+      .catch(err => log("❌ Cashout error: " + err.message));
+    }
+
+    loadWallet();
+  </script>
+</body>
+</html>
